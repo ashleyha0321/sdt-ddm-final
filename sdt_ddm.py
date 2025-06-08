@@ -402,3 +402,11 @@ if __name__ == "__main__":
     for p in delta_data['pnum'].unique()[:10]:  # Plot first 3 participants for brevity
         print(f"Generating delta plots for participant {p}...")
         draw_delta_plots(delta_data, p)
+
+# Trace plots to assess convergence
+    az.plot_trace(trace, var_names=[
+        "intercept_d", "stim_effect_d", "diff_effect_d", "interaction_d",
+        "intercept_c", "stim_effect_c", "diff_effect_c", "interaction_c"
+    ])
+    plt.tight_layout()
+    plt.savefig(Path(__file__).parent / "results" / "trace_plots.png")
