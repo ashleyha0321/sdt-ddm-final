@@ -2,6 +2,8 @@
 Signal Detection Theory (SDT) and Delta Plot Analysis for Response Time Data
 """
 
+# Code was modified with the assistance of ChatGPT
+
 import numpy as np
 import pymc as pm
 import arviz as az
@@ -284,7 +286,7 @@ def draw_delta_plots(data, pnum):
                             figsize=(4*n_conditions, 4*n_conditions))
     
     # Create output directory
-    OUTPUT_DIR = Path(__file__).parent.parent.parent / 'output'
+    OUTPUT_DIR = Path(__file__).parent / 'results'
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
     # Define marker style for plots
@@ -364,6 +366,39 @@ def draw_delta_plots(data, pnum):
 
 # Main execution
 if __name__ == "__main__":
-    file_to_print = Path(__file__).parent / 'README.md'
-    with open(file_to_print, 'r') as file:
-        print(file.read())
+    # Set file path
+    file_path = Path(__file__).parent / 'data.csv'
+
+    # 1. Read and prepare SDT data
+    print("Reading and preparing SDT data...")
+    sdt_data = read_data(file_path, prepare_for='sdt', display=True)
+
+    # 2. Build and sample from the hierarchical SDT model
+    print("\nFitting hierarchical SDT model...")
+    sdt_model = apply_hierarchical_sdt_model(sdt_data)
+    with sdt_model:
+        trace = pm.sample(draws=1000, tune=1000, target_accept=0.9, random_seed=42)
+
+    # 3. Summarize and plot SDT model results
+    print("\nModel summary:")
+    summary = az.summary(trace, var_names=[
+        "intercept_d", "stim_effect_d", "diff_effect_d", "interaction_d",
+        "intercept_c", "stim_effect_c", "diff_effect_c", "interaction_c"
+    ])
+    print(summary)
+
+    az.plot_forest(trace, var_names=["intercept_d", "stim_effect_d", "diff_effect_d", "interaction_d"])
+    plt.tight_layout()
+    plt.savefig(Path(__file__).parent / "output" / "sdt_forest_d.png")
+    az.plot_forest(trace, var_names=["intercept_c", "stim_effect_c", "diff_effect_c", "interaction_c"])
+    plt.tight_layout()
+    plt.savefig(Path(__file__).parent / "output" / "sdt_forest_c.png")
+
+    # 4. Prepare data for delta plot analysis
+    print("\nPreparing delta plot data...")
+    delta_data = read_data(file_path, prepare_for='delta plots', display=True)
+
+    # 5. Generate delta plots for all participants (or a few if many)
+    for p in delta_data['pnum'].unique()[:10]:  # Plot first 3 participants for brevity
+        print(f"Generating delta plots for participant {p}...")
+        draw_delta_plots(delta_data, p)
