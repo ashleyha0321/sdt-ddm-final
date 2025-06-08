@@ -149,6 +149,10 @@ if __name__ == "__main__":
     plt.title("Posterior Distributions: mean_d and mean_c")
     plt.savefig(OUTPUT_DIR / "sdt_posteriors.png")
 
+    az.plot_trace(trace, var_names=["mean_d", "mean_c"])
+    plt.savefig(OUTPUT_DIR / "sdt_traceplots.png")
+
+
     print("Reading data for delta plots...")
     delta_data = read_data(path, prepare_for='delta plots')
 
