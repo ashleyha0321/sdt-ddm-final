@@ -6,6 +6,8 @@ import pandas as pd
 from pathlib import Path
 import os
 
+# Code was written with the assistance of ChatGPT
+
 # Constants
 PERCENTILES = [10, 30, 50, 70, 90]
 MAPPINGS = {
@@ -135,7 +137,7 @@ if __name__ == "__main__":
 
     print("Reading data for SDT...")
     sdt_data = read_data(path, prepare_for='sdt')
-    sdt_data['pnum'] = pd.Categorical(sdt_data['pnum']).codes  # Ensure index starts at 0
+    sdt_data['pnum'] = pd.Categorical(sdt_data['pnum']).codes  
 
     print("Fitting SDT model...")
     model, trace = apply_hierarchical_sdt_model(sdt_data)
@@ -160,3 +162,41 @@ if __name__ == "__main__":
     for pnum in delta_data['pnum'].unique():
         draw_delta_plots(delta_data, pnum)
 
+def plot_binary_posteriors(trace, var_names, hdi_prob=0.94, output_folder="figures", filename="Z_posteriors.png", show=False):
+    """
+    Plots and saves posterior distributions for binary consensus answers (e.g., 0 or 1).
+
+    Parameters:
+    - trace: ArviZ InferenceData object
+    - var_names: list of variable names to plot (e.g., ['Z[0]', 'Z[1]', ...])
+    - hdi_prob: HDI width (default 94%)
+    - output_folder: directory to save PNG to
+    - filename: name of PNG file
+    - show: if True, display the plot after saving
+    """
+    # Ensure output folder exists
+    os.makedirs(output_folder, exist_ok=True)
+    
+    # Prepare figure
+    n_vars = len(var_names)
+    fig, axs = plt.subplots(1, n_vars, figsize=(3 * n_vars, 4), constrained_layout=True)
+
+    if n_vars == 1:
+        axs = [axs]
+
+    for i, var in enumerate(var_names):
+        az.plot_posterior(trace, var_names=[var], ax=axs[i], hdi_prob=hdi_prob)
+        axs[i].set_title(f"{var}", fontsize=10)
+        axs[i].set_xlim(-0.5, 1.5)
+
+    plt.suptitle("Posterior Probabilities for Consensus Answers (Z)", fontsize=14)
+
+    # Save to specified output path
+    save_path = os.path.join(output_folder, filename)
+    plt.savefig(save_path, dpi=300)
+    print(f"Posterior plot saved to: {save_path}")
+
+    if show:
+        plt.show()
+    else:
+        plt.close()
