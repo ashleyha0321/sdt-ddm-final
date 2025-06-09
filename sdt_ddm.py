@@ -2,8 +2,6 @@
 Signal Detection Theory (SDT) and Delta Plot Analysis for Response Time Data
 """
 
-# Code was modified with the assistance of ChatGPT
-
 import numpy as np
 import pymc as pm
 import arviz as az
@@ -177,56 +175,6 @@ def apply_hierarchical_sdt_model(data):
     Returns:
         PyMC model object
     """
-def apply_hierarchical_sdt_model(data):
-    P = len(data['pnum'].unique())
-    data = data.copy()
-    data['stimulus_type'] = data['condition'] % 2
-    data['difficulty'] = data['condition'] // 2
-    C = data['condition'].nunique()
-
-    with pm.Model() as sdt_model:
-        # Priors on fixed effects
-        intercept_d = pm.Normal('intercept_d', mu=0, sigma=1)
-        stim_effect_d = pm.Normal('stim_effect_d', mu=0, sigma=1)
-        diff_effect_d = pm.Normal('diff_effect_d', mu=0, sigma=1)
-        interaction_d = pm.Normal('interaction_d', mu=0, sigma=1)
-
-        intercept_c = pm.Normal('intercept_c', mu=0, sigma=1)
-        stim_effect_c = pm.Normal('stim_effect_c', mu=0, sigma=1)
-        diff_effect_c = pm.Normal('diff_effect_c', mu=0, sigma=1)
-        interaction_c = pm.Normal('interaction_c', mu=0, sigma=1)
-
-        # Varying intercepts
-        sigma_d = pm.HalfNormal('sigma_d', 1)
-        sigma_c = pm.HalfNormal('sigma_c', 1)
-
-        p_idx = data['pnum'].values - 1
-        d_offset = pm.Normal('d_offset', mu=0, sigma=1, shape=P)
-        c_offset = pm.Normal('c_offset', mu=0, sigma=1, shape=P)
-
-        # Linear model
-        d_prime = (intercept_d
-                   + stim_effect_d * data['stimulus_type']
-                   + diff_effect_d * data['difficulty']
-                   + interaction_d * data['stimulus_type'] * data['difficulty']
-                   + d_offset[p_idx] * sigma_d)
-
-        criterion = (intercept_c
-                   + stim_effect_c * data['stimulus_type']
-                   + diff_effect_c * data['difficulty']
-                   + interaction_c * data['stimulus_type'] * data['difficulty']
-                   + c_offset[p_idx] * sigma_c)
-
-        # Convert to probabilities
-        hit_rate = pm.Deterministic('hit_rate', pm.math.invlogit(d_prime - criterion))
-        fa_rate = pm.Deterministic('fa_rate', pm.math.invlogit(-criterion))
-
-        # Likelihood
-        pm.Binomial('hits_obs', n=data['nSignal'], p=hit_rate, observed=data['hits'])
-        pm.Binomial('fa_obs', n=data['nNoise'], p=fa_rate, observed=data['false_alarms'])
-
-    return sdt_model
-
     # Get unique participants and conditions
     P = len(data['pnum'].unique())
     C = len(data['condition'].unique())
@@ -286,7 +234,7 @@ def draw_delta_plots(data, pnum):
                             figsize=(4*n_conditions, 4*n_conditions))
     
     # Create output directory
-    OUTPUT_DIR = Path(__file__).parent / 'results'
+    OUTPUT_DIR = Path(__file__).parent.parent.parent / 'output'
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
     # Define marker style for plots
@@ -366,47 +314,6 @@ def draw_delta_plots(data, pnum):
 
 # Main execution
 if __name__ == "__main__":
-    # Set file path
-    file_path = Path(__file__).parent / 'data.csv'
-
-    # 1. Read and prepare SDT data
-    print("Reading and preparing SDT data...")
-    sdt_data = read_data(file_path, prepare_for='sdt', display=True)
-
-    # 2. Build and sample from the hierarchical SDT model
-    print("\nFitting hierarchical SDT model...")
-    sdt_model = apply_hierarchical_sdt_model(sdt_data)
-    with sdt_model:
-        trace = pm.sample(draws=1000, tune=1000, target_accept=0.9, random_seed=42)
-
-    # 3. Summarize and plot SDT model results
-    print("\nModel summary:")
-    summary = az.summary(trace, var_names=[
-        "intercept_d", "stim_effect_d", "diff_effect_d", "interaction_d",
-        "intercept_c", "stim_effect_c", "diff_effect_c", "interaction_c"
-    ])
-    print(summary)
-
-    az.plot_forest(trace, var_names=["intercept_d", "stim_effect_d", "diff_effect_d", "interaction_d"])
-    plt.tight_layout()
-    plt.savefig(Path(__file__).parent / "output" / "sdt_forest_d.png")
-    az.plot_forest(trace, var_names=["intercept_c", "stim_effect_c", "diff_effect_c", "interaction_c"])
-    plt.tight_layout()
-    plt.savefig(Path(__file__).parent / "output" / "sdt_forest_c.png")
-
-    # 4. Prepare data for delta plot analysis
-    print("\nPreparing delta plot data...")
-    delta_data = read_data(file_path, prepare_for='delta plots', display=True)
-
-    # 5. Generate delta plots for all participants (or a few if many)
-    for p in delta_data['pnum'].unique()[:10]:  # Plot first 3 participants for brevity
-        print(f"Generating delta plots for participant {p}...")
-        draw_delta_plots(delta_data, p)
-
-# Trace plots to assess convergence
-    az.plot_trace(trace, var_names=[
-        "intercept_d", "stim_effect_d", "diff_effect_d", "interaction_d",
-        "intercept_c", "stim_effect_c", "diff_effect_c", "interaction_c"
-    ])
-    plt.tight_layout()
-    plt.savefig(Path(__file__).parent / "results" / "trace_plots.png")
+    file_to_print = Path(__file__).parent / 'README.md'
+    with open(file_to_print, 'r') as file:
+        print(file.read())

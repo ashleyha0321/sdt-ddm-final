@@ -6,7 +6,7 @@ import pandas as pd
 from pathlib import Path
 import os
 
-# Code was written with the assistance of ChatGPT
+# Code was written with the assistance of ChatGPT & used code from sdt_ddm.py 
 
 # Constants
 PERCENTILES = [10, 30, 50, 70, 90]
@@ -21,7 +21,7 @@ CONDITION_NAMES = {
     2: 'Hard Simple',
     3: 'Hard Complex'
 }
-OUTPUT_DIR = Path(__file__).parent / 'output'
+OUTPUT_DIR = Path(__file__).parent / 'figures'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 def read_data(file_path, prepare_for='sdt', display=False):
@@ -147,17 +147,17 @@ if __name__ == "__main__":
     print(summary)
     summary.to_csv(OUTPUT_DIR / 'sdt_summary.csv')
 
-    az.plot_forest(trace, var_names=["mean_d", "mean_c"], combined=True)
-    plt.title("Posterior Distributions: mean_d and mean_c")
-    plt.savefig(OUTPUT_DIR / "sdt_posteriors.png")
-
-    az.plot_trace(trace, var_names=["mean_d", "mean_c"])
-    plt.savefig(OUTPUT_DIR / "sdt_traceplots.png")
-
-
     print("Reading data for delta plots...")
     delta_data = read_data(path, prepare_for='delta plots')
 
     print("Generating delta plots for each participant...")
     for pnum in delta_data['pnum'].unique():
         draw_delta_plots(delta_data, pnum)
+
+# Posterior distributions
+    print("Creating posterior distribution plots...")
+    az.plot_posterior(trace, var_names=["mean_d", "mean_c"], hdi_prob=0.94)
+    plt.suptitle("Posterior Distributions with 94% HDI", fontsize=14)
+    plt.tight_layout()
+    plt.savefig(OUTPUT_DIR / "sdt_posterior_distributions.png")
+    plt.close()
