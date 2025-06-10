@@ -234,7 +234,7 @@ def draw_delta_plots(data, pnum):
                             figsize=(4*n_conditions, 4*n_conditions))
     
     # Create output directory
-    OUTPUT_DIR = Path(__file__).parent.parent.parent / 'output'
+    OUTPUT_DIR = Path(__file__).parent / 'figures'
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
     # Define marker style for plots
@@ -314,6 +314,25 @@ def draw_delta_plots(data, pnum):
 
 # Main execution
 if __name__ == "__main__":
-    file_to_print = Path(__file__).parent / 'README.md'
-    with open(file_to_print, 'r') as file:
-        print(file.read())
+    # Load data
+    data_path = Path(__file__).parent / 'data.csv'
+    sdt_data = read_data(data_path, prepare_for='sdt', display=True)
+
+    # Run hierarchical SDT model 
+    model = apply_hierarchical_sdt_model(sdt_data)
+    with model:
+        trace = pm.sample(1000, tune=1000, target_accept=0.9)
+
+    # Trace plot for convergence
+    az.plot_trace(trace)
+    OUTPUT_DIR = Path(__file__).parent / 'figures'
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    plt.savefig(OUTPUT_DIR / f'trace_plot.png')
+
+    # Generate delta plots for all participants
+    rt_data = read_data(data_path, prepare_for='delta plots', display=True)
+    unique_participants = rt_data['pnum'].unique()
+
+    for pnum in unique_participants:
+        print(f"Generating delta plots for participant {pnum}...")
+        draw_delta_plots(rt_data, pnum=pnum)
