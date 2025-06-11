@@ -1,3 +1,3 @@
 # Final assignment for Cognitive Modeling (COGS 107)
 
-This repo includes sdt_ddm.py, sdt_ddm.py, and figures generated from the SDT analysis. 
+This repo includes revised code from sdt_ddm.py to perform the analysis and resulting figures. 
