@@ -323,12 +323,6 @@ if __name__ == "__main__":
     with model:
         trace = pm.sample(1000, tune=1000, target_accept=0.9)
 
-    # Trace plot for convergence
-    az.plot_trace(trace)
-    OUTPUT_DIR = Path(__file__).parent / 'figures'
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    plt.savefig(OUTPUT_DIR / f'trace_plot.png')
-
     # Generate delta plots for all participants
     rt_data = read_data(data_path, prepare_for='delta plots', display=True)
     unique_participants = rt_data['pnum'].unique()
@@ -336,3 +330,26 @@ if __name__ == "__main__":
     for pnum in unique_participants:
         print(f"Generating delta plots for participant {pnum}...")
         draw_delta_plots(rt_data, pnum=pnum)
+
+    # Checking for convergence
+    print("Saving trace summary...")
+    summary = az.summary(trace, var_names=["mean_d_prime", "mean_criterion"])
+    print(summary)
+    OUTPUT_DIR = Path(__file__).parent / 'figures'
+    summary.to_csv(OUTPUT_DIR / 'sdt_summary.csv')
+    
+    # Checking that R-hat values < 1.01
+    rhat = summary['r_hat']
+    if (rhat > 1.01).any():
+        print("\nWarning: Some R-hat values are > 1.01, indicating potential convergence issues.")
+        print(summary)
+    else:
+        print(f"\nAll R-hat values look good.")
+
+    # Posterior distributions
+    print("Creating posterior distribution plots...")
+    az.plot_posterior(trace, var_names=["mean_d_prime", "mean_criterion"], hdi_prob=0.94)
+    plt.suptitle("Posterior Distributions with 94% HDI", fontsize=14)
+    plt.tight_layout()
+    plt.savefig(OUTPUT_DIR / "sdt_posterior_distributions.png")
+    plt.close()
