@@ -104,34 +104,6 @@ def apply_hierarchical_sdt_model(data):
         trace = pm.sample(1000, tune=1000, target_accept=0.9, return_inferencedata=True)
     return model, trace
 
-#def draw_delta_plots(data, pnum):
-    #data = data[data['pnum'] == pnum]
-    #conds = sorted(data['condition'].unique())
-    #fig, axes = plt.subplots(len(conds), len(conds), figsize=(15, 15))
-    #for i, c1 in enumerate(conds):
-        #for j, c2 in enumerate(conds):
-            #ax = axes[i, j]
-            #ax.axhline(0, color='gray', ls='--')
-            #if i == j:
-                #ax.axis('off')
-                #continue
-            #for mode, color in [('overall', 'black'), ('error', 'red'), ('accurate', 'green')]:
-                #q1 = data[(data['condition'] == c1) & (data['mode'] == mode)]
-                #q2 = data[(data['condition'] == c2) & (data['mode'] == mode)]
-                #if not q1.empty and not q2.empty:
-                    #diffs = q2.iloc[0][[f'p{p}' for p in PERCENTILES]] - q1.iloc[0][[f'p{p}' for p in PERCENTILES]]
-                    #ax.plot(PERCENTILES, diffs, label=mode, color=color)
-            #if i == len(conds)-1:
-                #ax.set_xlabel(CONDITION_NAMES[c2])
-            #if j == 0:
-                #ax.set_ylabel(CONDITION_NAMES[c1])
-    #handles = [plt.Line2D([], [], color=c, label=m) for m, c in [('Overall', 'black'), ('Error', 'red'), ('Accurate', 'green')]]
-    #fig.legend(handles=handles, loc='upper right')
-    #plt.suptitle(f'Delta Plots for Participant {pnum}')
-    #plt.tight_layout()
-    #plt.savefig(OUTPUT_DIR / f'delta_plots_p{pnum}.png')
-    #plt.close()
-
 if __name__ == "__main__":
     path = Path(__file__).parent / 'data.csv'
 
@@ -146,13 +118,6 @@ if __name__ == "__main__":
     summary = az.summary(trace, var_names=["mean_d", "mean_c"])
     print(summary)
     summary.to_csv(OUTPUT_DIR / 'sdt_summary.csv')
-
-    #print("Reading data for delta plots...")
-    #delta_data = read_data(path, prepare_for='delta plots')
-
-    #print("Generating delta plots for each participant...")
-    #for pnum in delta_data['pnum'].unique():
-        #draw_delta_plots(delta_data, pnum)
 
 # Posterior distributions
     print("Creating posterior distribution plots...")
