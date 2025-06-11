@@ -2,6 +2,8 @@
 Signal Detection Theory (SDT) and Delta Plot Analysis for Response Time Data
 """
 
+# code was adjusted from the original sdt_ddm.py and written with the assistance of ChatGPT
+
 import numpy as np
 import pymc as pm
 import arviz as az
